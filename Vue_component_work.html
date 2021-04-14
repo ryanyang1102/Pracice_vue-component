@@ -98,6 +98,12 @@
           $.get(api).then(function (response) {
             vm.data = response;
             console.log(response);
+            let apiArray = [];
+            apiArray = vm.data.map(item => {
+              return item.County;
+            });
+            vm.location = Array.from(new Set(apiArray));
+            console.log(vm.location);
           });
         },
       },
