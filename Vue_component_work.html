@@ -108,7 +108,7 @@
       data: {
         data: [],
         location: [],
-        stared: [],
+        stared: JSON.parse(localStorage.getItem('stared')) || [],
         selected: '',
       },
       // 請在此撰寫 JavaScript
@@ -118,7 +118,7 @@
           const api = 'http://opendata2.epa.gov.tw/AQI.json';
 
           // 使用 jQuery ajax
-          $.get(api).then(function (response) {
+          $.get(api).then(response => {
             vm.data = response;
             // console.log(response);
             let apiArray = [];
@@ -141,6 +141,7 @@
             }
           }
           // console.log(vm.stared);
+          localStorage.setItem('stared', JSON.stringify(vm.stared));
         }
       },
       computed: {
