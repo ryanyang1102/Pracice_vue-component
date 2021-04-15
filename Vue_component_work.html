@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <title>JS Bin</title>
@@ -13,7 +15,7 @@
   <div id="app">
     <select name="" id="" class="form-control mb-3" v-model="selected">
       <option value="" disabled>--- 請選擇城市 ---</option>
-      <option v-for="(item, index) in location" :key="index" :value="item">
+      <option v-for="item in location" :value="item">
         {{ item }}
       </option>
     </select>
@@ -33,18 +35,28 @@
             2018-05-20 16:00
           </div>
         </div> -->
+        <card-city class="card" v-for="(item, index) in staredData" :key="index" :cities="item" @switch-card="switchStar(item)">
+          <template slot="icon-star">
+            <i class="fas fa-star"></i>
+          </template>
+        </card-city>
       </div>
     </div>
     <hr>
     <div class="card-columns">
-      <card-city class="card" v-for="(item, index) in data" :key="item.SiteName" :cities="item" v-if="selected === '' || item.County === selected"></card-city>
+      <card-city class="card" v-for="(item, index) in filterData" :key="index" :cities="item"
+        @switch-card="switchStar(item)"></card-city>
     </div>
   </div>
 
   <script type="text/x-template" id="cardCity">
-    <div class="card status-aqi2">
+    <div class="card" :class="statusClass(cities.Status)">
       <div class="card-header">{{ cities['County'] }} - {{ cities['SiteName'] }}
-        <a href="#" class="float-right"><i class="far fa-star"></i></a>
+        <a href="#" class="float-right" @click.prevent="setFocus">
+          <slot name="icon-star">
+            <i class="far fa-star"></i>
+          </slot>
+        </a>
       </div>
       <div class="card-body">
         <ul class="list-unstyled">
@@ -56,7 +68,117 @@
       </div>
     </div>
   </script>
+
+  <script>
+    Vue.component('card-city', {
+      props: ['cities'],
+      template: '#cardCity',
+      methods: {
+        setFocus() {
+          this.$emit('switch-card'); // 注意這裡的事件只能用小寫
+        },
+        statusClass(status) {
+          switch(status) {
+            case "良好":
+              return "status-aqi1";
+              break;
+            case "普通":
+              return "status-aqi2";
+              break;
+            case "對敏感族群不健康":
+              return "status-aqi3";
+              break;
+            case "對所有族群不健康":
+              return "status-aqi4";
+              break;
+            case "非常不健康":
+              return "status-aqi5";
+              break;
+            case "危害":
+              return "status-aqi6";
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    });
+
+    const app = new Vue({
+      data: {
+        data: [],
+        location: [],
+        stared: [],
+        selected: '',
+      },
+      // 請在此撰寫 JavaScript
+      methods: {
+        getData() {
+          const vm = this;
+          const api = 'http://opendata2.epa.gov.tw/AQI.json';
+
+          // 使用 jQuery ajax
+          $.get(api).then(function (response) {
+            vm.data = response;
+            // console.log(response);
+            let apiArray = [];
+            apiArray = vm.data.map(item => {
+              return item.County;
+            });
+            vm.location = Array.from(new Set(apiArray));
+            // console.log(vm.location);
+          });
+        },
+        switchStar(item) {
+          const vm = this;
+          if (!vm.stared.includes(item.SiteName)) { // 關注陣列裡面有無包含 點擊到的地點 資料
+            vm.stared.push(item.SiteName);        // 將資料放進關注陣列
+          } else {
+            for (let i = 0; i <= vm.stared.length; i++) {
+              if (vm.stared[i] === item.SiteName) {
+                vm.stared.splice(i, 1);
+              }
+            }
+          }
+          // console.log(vm.stared);
+        }
+      },
+      computed: {
+        filterData() {
+          const vm = this;
+          if (vm.selected === '') {
+            return vm.data.filter(item => {
+              // 回傳「 stared 裡頭"沒有"的縣市（沒有被關注） 」的資料
+              return vm.stared.indexOf(item.SiteName) === -1;
+            });
+          } else {
+            return vm.data.filter(item => {
+              if (item.County === vm.selected) {
+                return vm.stared.indexOf(item.SiteName) === -1;
+              }
+            });
+          };
+        },
+        staredData() {
+          const vm = this;
+          return vm.data.filter(item => {
+            // 回傳「 字串 stared 裡頭"有"的縣市（有被關注） 」的資料
+            return vm.stared.indexOf(item.SiteName) > -1;
+          })
+        }
+      },
+      created() {
+        this.getData();
+      }
+    });
+    app.$mount('#app');
+
+  </script>
+
   <style>
+    .status-aqi1 {
+      background-color: #69f0ae;
+    }
     .status-aqi2 {
       background-color: #ffff00;
     }
@@ -77,47 +199,6 @@
       background-color: #7e0023;
     }
   </style>
-  <script>
-    Vue.component('card-city', {
-      props: ['cities'],
-      template: '#cardCity',
-    });
-
-    const app = new Vue({
-      data: {
-        data: [],
-        location: [],
-        stared: [],
-        selected: '',
-        filter: '',
-      },
-      // 請在此撰寫 JavaScript
-      methods: {
-        getData() {
-          const vm = this;
-          const api = 'http://opendata2.epa.gov.tw/AQI.json';
-
-          // 使用 jQuery ajax
-          $.get(api).then(function (response) {
-            vm.data = response;
-            console.log(response);
-            let apiArray = [];
-            apiArray = vm.data.map(item => {
-              return item.County;
-            });
-            vm.location = Array.from(new Set(apiArray));
-            console.log(vm.location);
-          });
-        },
-      },
-      created() {
-        this.getData();
-      }
-    });
-    app.$mount('#app');
-
-  </script>
-
 
 </body>
 
