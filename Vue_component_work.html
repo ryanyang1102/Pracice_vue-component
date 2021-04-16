@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://bootswatch.com/4/sketchy/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -12,42 +13,45 @@
 </head>
 
 <body>
-  <div id="app">
-    <select name="" id="" class="form-control mb-3" v-model="selected">
-      <option value="" disabled>--- 請選擇城市 ---</option>
-      <option v-for="item in location" :value="item">
-        {{ item }}
-      </option>
-    </select>
-    <div>
-      <h4>關注城市</h4>
+  <div class="container my-5">
+    <div id="app">
+      <select name="" id="" class="form-control mb-3" v-model="selected">
+        <option value="" disabled>--- 請選擇城市 ---</option>
+        <option v-for="item in location" :value="item">
+          {{ item }}
+        </option>
+      </select>
+      <div>
+        <h4>關注城市</h4>
+        <div class="card-columns">
+          <!-- <div class="card status-aqi2">
+            <div class="card-header">苗栗縣 - 三義
+              <a href="#" class="float-right"><i class="fas fa-star"></i></a>
+            </div>
+            <div class="card-body">
+              <ul class="list-unstyled">
+                <li>AQI 指數: 54</li>
+                <li>PM2.5: 8</li>
+                <li>說明: 普通</li>
+              </ul>
+              2018-05-20 16:00
+            </div>
+          </div> -->
+          <card-city class="card" v-for="(item, index) in staredData" :key="index" :cities="item" @switch-card="switchStar(item)">
+            <template slot="icon-star">
+              <i class="fas fa-star"></i>
+            </template>
+          </card-city>
+        </div>
+      </div>
+      <hr>
       <div class="card-columns">
-        <!-- <div class="card status-aqi2">
-          <div class="card-header">苗栗縣 - 三義
-            <a href="#" class="float-right"><i class="fas fa-star"></i></a>
-          </div>
-          <div class="card-body">
-            <ul class="list-unstyled">
-              <li>AQI 指數: 54</li>
-              <li>PM2.5: 8</li>
-              <li>說明: 普通</li>
-            </ul>
-            2018-05-20 16:00
-          </div>
-        </div> -->
-        <card-city class="card" v-for="(item, index) in staredData" :key="index" :cities="item" @switch-card="switchStar(item)">
-          <template slot="icon-star">
-            <i class="fas fa-star"></i>
-          </template>
-        </card-city>
+        <card-city class="card" v-for="(item, index) in filterData" :key="index" :cities="item"
+          @switch-card="switchStar(item)"></card-city>
       </div>
     </div>
-    <hr>
-    <div class="card-columns">
-      <card-city class="card" v-for="(item, index) in filterData" :key="index" :cities="item"
-        @switch-card="switchStar(item)"></card-city>
-    </div>
   </div>
+
 
   <script type="text/x-template" id="cardCity">
     <div class="card" :class="statusClass(cities.Status)">
